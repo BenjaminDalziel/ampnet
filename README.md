@@ -33,4 +33,4 @@ https://github.com/user-attachments/assets/b09fd778-ccc9-41fa-8648-6419d9b72d63
 
 ### Our individual neural nets will be trained in parallel and collectively validated against these real-world patterns.
 
-### With additional resources, we aim to scale the use of these Digital Twins to numerous cities in Oregon with varying characteristics.
+### With additional resources, we aim to scale the use of these Digital Twins to numerous cities in Oregon with different characteristics, and to forecast disease transmission patterns under varied conditions.
