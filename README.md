@@ -22,7 +22,6 @@ we aim to discover how coordinated yet minimally disruptive changes in movement 
 ## Validation of one individual's movement net after some training.
 ![Validation of Movement Net](figures/individual_net.png)
 
-
 #### Example: building a Digital Twin of the city of Newport, Oregon, est. pop. 10,489. 
 
 Neural networks are trained to represent patterns of human mobility within the city.
