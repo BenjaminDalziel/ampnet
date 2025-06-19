@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository hosts **AMPNet** (Adaptive Massively Parallel Networks), a computational framework for modeling and simulating emergent, adaptive changes to human mobility patterns in cities. Our goal is to quantify how “city-scale immune systems”—built from low-friction, adaptive changes in movement—can reduce the spread of infectious diseases in urban environments.
+This repository hosts **AMPNet** (Adaptive Massively Parallel Networks), a computational framework for modeling emergent, adaptive changes to human mobility patterns in cities. Our goal is to quantify how “city-scale immune systems”—built from low-friction, adaptive changes in movement—can reduce the spread of infectious diseases in urban environments.
 
 The project leverages high-resolution mobility data and modern AI methods to create **digital twins** of cities, enabling large-scale, data-driven experiments on epidemic control strategies.
 
