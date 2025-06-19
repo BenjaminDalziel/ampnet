@@ -19,7 +19,9 @@ By combining:
 
 we aim to discover how coordinated yet minimally disruptive changes in movement (e.g., desynchronizing transit or shopping) can transform epidemic trajectories at city scale.
 
-## Validation of one individual's movement net after some training.
+---
+
+### Validation of one individual's movement net after some training.
 ![Validation of Movement Net](figures/individual_net.png)
 
 #### Example: building a Digital Twin of the city of Newport, Oregon, est. pop. 10,489. 
@@ -52,4 +54,9 @@ https://github.com/user-attachments/assets/94755f13-08f2-473a-8be8-d3dae8792118
 
 https://github.com/user-attachments/assets/b09fd778-ccc9-41fa-8648-6419d9b72d63
 
+---
+
+Circadian movement patterns across all physical structures in the city of Newport, Oregon
+
+![newport_surface](figures/newport_surface.png)
 
