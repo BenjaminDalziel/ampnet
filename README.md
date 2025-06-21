@@ -1,4 +1,4 @@
-# AMPNet: Digital twins of human mobility in cities using Adaptive Massively Parallel NETworks
+# AMPNet: Digital twins of human mobility in cities using **A**daptive **M**assively Parallel Networks
 
 ## Overview
 
