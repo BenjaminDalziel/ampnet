@@ -20,8 +20,12 @@ By combining:
 we aim to discover how coordinated yet minimally disruptive changes in movement (e.g., desynchronizing transit or shopping) can transform epidemic trajectories at city scale.
 
 ---
+#### Digital twin model for the city of Newport, showing synthetic population embedded in real physical and demographic structure, and hourly mobility patterns estimated from mobile device data (Safegraph) for each hour of the year for two example locations.
+![newport_digital_twin](figures/fig_newport_twin.png)
 
-### Example: building a Digital Twin of the city of Newport, Oregon, est. pop. 10,489. 
+---
+
+#### Bilding the Digital Twin of the city of Newport, Oregon, est. pop. 10,489. 
 
 Neural networks are trained to represent patterns of human mobility within the city.
 
