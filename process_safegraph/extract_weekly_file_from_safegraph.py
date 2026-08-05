@@ -8,10 +8,10 @@ import json
 import time
 from datetime import date, datetime
 
-target_folder = r"\\depot.engr.oregonstate.edu\mime_u1\dalziel\Safe Graph Data\Weekly Patterns\Digital_Twins_Analysis\2019\2019_weekly"
+target_folder = r"../../novus/matchingnemo/scratch/Safegraph/Digital_Twins_Analysis/2019/2019_weekly"
 
-data_2019 = '//depot.engr.oregonstate.edu/mime_u1/dalziel/Safe Graph Data/Weekly Patterns/2019_Weekly_Patterns'
-data_2020 = '//depot.engr.oregonstate.edu/mime_u1/dalziel/Safe Graph Data/Weekly Patterns/2020_Weekly_Patterns'
+data_2019 = '../../novus/matchingnemo/scratch/Safegraph/2019_Weekly_Patterns/'
+data_2020 = '../../novus/matchingnemo/scratch/Safegraph/2020_Weekly_Patterns/'
 cities = ['Portland']
 
 
