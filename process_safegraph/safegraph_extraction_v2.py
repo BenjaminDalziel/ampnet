@@ -116,6 +116,7 @@ for file in os.listdir(data_2019):
     
     matches["safegraph_place_id"] = matches["safegraph_place_id"].astype(str)
     read_pd["safegraph_place_id"] = read_pd["safegraph_place_id"].astype(str)
+    
     outfile = matches.merge(read_pd, on="safegraph_place_id", how="left")
 
     cols_in_csv = [
@@ -133,6 +134,8 @@ for file in os.listdir(data_2019):
     ]
 
     outfile = outfile.loc[:,cols_in_csv]
+    outfile = outfile.groupby(['safegraph_place_id', 't']).agg({'visits': 'sum'}).reset_index()
+
 
     outfile.to_parquet(os.path.join(folder_to_save, f"w{week}.parquet"), engine="pyarrow", index=False)
 
