@@ -38,6 +38,20 @@ cols_to_read = [
     "bucketed_dwell_times",
 ]
 
+cols_in_parquet = [
+    "build_id",
+    "occ_cls",
+    "prim_occ",
+    "sqmeters",
+    "sqfeet",
+    "censuscode",
+    "uuid",
+    "safegraph_place_id",
+    "date_range_start",
+    "t",
+    "visits"
+    ]
+
 core_places_data_2019 = "../../novus/matchingnemo/scratch/safegraph_data/Core Places Data/CoreRecords-CORE_POI-2019_03-2020-03-25"
 city = "Portland"
 gdf = gpd.read_file(r"../../novus/matchingnemo/scratch/safegraph_data/Weekly Patterns/Digital_Twins_Analysis/temporary_stash_very_heavy/entire_or_structures_clip.gpkg")
@@ -56,12 +70,15 @@ gdf_subset = gdf[
         "geometry",
     ]
 ]
-gdf_nonresidential = gdf_subset[gdf_subset["OCC_CLS"] != "Residential"]
+
+gdf_subset.columns = gdf_subset.columns.str.lower()
+gdf_nonresidential = gdf_subset[gdf_subset["occ_cls"] != "Residential"]
 
 
-places_data = pd.read_csv(
-    r"../../novus/matchingnemo/scratch/safegraph_data/Weekly Patterns/Digital_Twins_Analysis/temporary_stash_very_heavy/2019_Portland.csv"
+places_data = pd.read_parquet(
+"../../novus/matchingnemo/scratch/ampnet_data/safegraph_POIs/2019.parquet"
 )
+
 places_centroid = gpd.GeoDataFrame(
     places_data,
     geometry=gpd.points_from_xy(places_data.longitude, places_data.latitude),
@@ -118,24 +135,15 @@ for file in os.listdir(data_2019):
     read_pd["safegraph_place_id"] = read_pd["safegraph_place_id"].astype(str)
     
     outfile = matches.merge(read_pd, on="safegraph_place_id", how="left")
+    
 
-    cols_in_csv = [
-        "BUILD_ID",
-        "OCC_CLS",
-        "PRIM_OCC",
-        "SQMETERS",
-        "SQFEET",
-        "CENSUSCODE",
-        "UUID",
-        "safegraph_place_id",
-        "date_range_start",
-        "t",
-        "visits"
-    ]
-
-    outfile = outfile.loc[:,cols_in_csv]
-    outfile = outfile.groupby(['safegraph_place_id', 't']).agg({'visits': 'sum'}).reset_index()
-
+    agg_dict = {item: 'first' for item in cols_in_csv}
+    agg_dict['visits'] = 'sum'
+    del(agg_dict['t'])
+    del(agg_dict['safegraph_place_id'])
+    outfile = outfile.loc[:,cols_in_parquet]
+    
+    outfile2 = outfile.groupby(['safegraph_place_id', 't']).agg(agg_dict).reset_index()
 
     outfile.to_parquet(os.path.join(folder_to_save, f"w{week}.parquet"), engine="pyarrow", index=False)
 
