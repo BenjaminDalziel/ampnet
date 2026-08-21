@@ -52,42 +52,24 @@ cols_in_parquet = [
     "visits"
     ]
 
-core_places_data_2019 = "../../novus/matchingnemo/scratch/safegraph_data/Core Places Data/CoreRecords-CORE_POI-2019_03-2020-03-25"
-city = "Portland"
+# FEMA dataset for all of Oregon
 gdf = gpd.read_file(r"../../novus/matchingnemo/scratch/safegraph_data/Weekly Patterns/Digital_Twins_Analysis/temporary_stash_very_heavy/entire_or_structures_clip.gpkg")
-folder_to_save = r"../../novus/matchingnemo/scratch/ampnet_data/Portland"
-
-
-gdf_subset = gdf[
-    [
-        "BUILD_ID",
-        "OCC_CLS",
-        "PRIM_OCC",
-        "SQMETERS",
-        "SQFEET",
-        "CENSUSCODE",
-        "UUID",
-        "geometry",
-    ]
-]
-
+gdf_subset = gdf[["BUILD_ID", "OCC_CLS", "PRIM_OCC", "SQMETERS", "SQFEET", "CENSUSCODE", "UUID", "geometry",]]
 gdf_subset.columns = gdf_subset.columns.str.lower()
+
 gdf_nonresidential = gdf_subset[gdf_subset["occ_cls"] != "Residential"]
 
+folder_to_save = f"../../novus/matchingnemo/scratch/ampnet_data/{city}"
+places_data = pd.read_parquet("../../novus/matchingnemo/scratch/ampnet_data/safegraph_POIs/2019.parquet")
 
-places_data = pd.read_parquet(
-"../../novus/matchingnemo/scratch/ampnet_data/safegraph_POIs/2019.parquet"
-)
-
+# convert Safegraph centroids to Point objects to work with geopandas
 places_centroid = gpd.GeoDataFrame(
     places_data,
     geometry=gpd.points_from_xy(places_data.longitude, places_data.latitude),
-    crs="EPSG:4326",
+    crs="EPSG:4326", # Not sure if this is the right projection, I don't see anything in Safegraph doc
 )
 
-matches = gpd.sjoin(
-    gdf_nonresidential, places_centroid, predicate="contains", how="left"
-)
+matches = gpd.sjoin(gdf_nonresidential, places_centroid, predicate="contains", how="left")
 
 schema_overrides = {"date_range_start": pl.Datetime, "distance_from_home": pl.Int64}
 
@@ -117,12 +99,12 @@ for file in os.listdir(data_2019):
     read = (
         read.filter(
             pl.col("iso_country_code") == "US",
-            pl.col("city") == "Portland",
+            pl.col("city") == city,
             pl.col("region") == "OR",
         )
         .select(cols_to_select)
         .with_columns(t=(pl.int_ranges(0, pl.col("visits_by_each_hour").list.len())))
-        .explode(["t", "visits_by_each_hour"])
+        .explode(["t", "visits_by_each_hour"]) # pivot to long format, same as melt from pandas
         .rename({"visits_by_each_hour": "visits"})
     )
 
@@ -137,13 +119,13 @@ for file in os.listdir(data_2019):
     outfile = matches.merge(read_pd, on="safegraph_place_id", how="left")
     
 
-    agg_dict = {item: 'first' for item in cols_in_csv}
+    agg_dict = {item: 'first' for item in cols_in_parquet}
     agg_dict['visits'] = 'sum'
     del(agg_dict['t'])
-    del(agg_dict['safegraph_place_id'])
+    del(agg_dict['build_id'])
     outfile = outfile.loc[:,cols_in_parquet]
     
-    outfile2 = outfile.groupby(['safegraph_place_id', 't']).agg(agg_dict).reset_index()
+    outfile2 = outfile.groupby(['build_id', 't']).agg(agg_dict).reset_index()
 
     outfile.to_parquet(os.path.join(folder_to_save, f"w{week}.parquet"), engine="pyarrow", index=False)
 
