@@ -1,0 +1,132 @@
+import json
+import os
+import sys
+import time
+from datetime import date, datetime
+
+import numpy as np
+import pandas as pd
+import polars as pl
+import pyarrow
+
+import geopandas as gpd
+import pandas as pd
+from shapely.geometry import Point
+
+city = 'Portland'
+
+data_2019 = "../../novus/matchingnemo/scratch/safegraph_data/Weekly Patterns/2019_Weekly_Patterns/"
+cols_to_read = [
+    "safegraph_place_id",
+    "location_name",
+    "street_address",
+    "city",
+    "region",
+    "postal_code",
+    "iso_country_code",
+    "date_range_start",
+    "raw_visit_counts",
+    "raw_visitor_counts",
+    "visits_by_day",
+    "visits_by_each_hour",
+    "poi_cbg",
+    "visitor_home_cbgs",
+    "visitor_daytime_cbgs",
+    "visitor_country_of_origin",
+    "distance_from_home",
+    "median_dwell",
+    "bucketed_dwell_times",
+]
+
+cols_in_parquet = [
+    "build_id",
+    "occ_cls",
+    "prim_occ",
+    "sqmeters",
+    "sqfeet",
+    "censuscode",
+    "uuid",
+    "safegraph_place_id",
+    "date_range_start",
+    "t",
+    "visits"
+    ]
+
+# FEMA dataset for all of Oregon
+gdf = gpd.read_file(r"../../novus/matchingnemo/scratch/safegraph_data/Weekly Patterns/Digital_Twins_Analysis/temporary_stash_very_heavy/entire_or_structures_clip.gpkg")
+gdf_subset = gdf[["BUILD_ID", "OCC_CLS", "PRIM_OCC", "SQMETERS", "SQFEET", "CENSUSCODE", "UUID", "geometry",]]
+gdf_subset.columns = gdf_subset.columns.str.lower()
+
+gdf_nonresidential = gdf_subset[gdf_subset["occ_cls"] != "Residential"]
+
+folder_to_save = f"../../novus/matchingnemo/scratch/ampnet_data/{city}"
+places_data = pd.read_parquet("../../novus/matchingnemo/scratch/ampnet_data/safegraph_POIs/2019.parquet")
+
+# convert Safegraph centroids to Point objects to work with geopandas
+places_centroid = gpd.GeoDataFrame(
+    places_data,
+    geometry=gpd.points_from_xy(places_data.longitude, places_data.latitude),
+    crs="EPSG:4326", # Not sure if this is the right projection, I don't see anything in Safegraph doc
+)
+
+matches = gpd.sjoin(gdf_nonresidential, places_centroid, predicate="contains", how="left")
+
+schema_overrides = {"date_range_start": pl.Datetime, "distance_from_home": pl.Int64}
+
+for file in os.listdir(data_2019):
+    
+    read = (
+        pl.scan_csv(os.path.join(data_2019, file), schema_overrides=schema_overrides)
+        .select(cols_to_read)
+        .with_columns(
+            [
+                pl.col("visits_by_each_hour").str.json_decode(pl.List(pl.Int64)),
+                pl.col("visits_by_day").str.json_decode(pl.List(pl.Int64)),
+            ]
+        )
+    )
+    
+    
+    cols_to_select = [
+        "safegraph_place_id",
+        "city",
+        "region",
+        "date_range_start",
+        "visits_by_each_hour",
+    ]
+    
+    
+    read = (
+        read.filter(
+            pl.col("iso_country_code") == "US",
+            pl.col("city") == city,
+            pl.col("region") == "OR",
+        )
+        .select(cols_to_select)
+        .with_columns(t=(pl.int_ranges(0, pl.col("visits_by_each_hour").list.len())))
+        .explode(["t", "visits_by_each_hour"]) # pivot to long format, same as melt from pandas
+        .rename({"visits_by_each_hour": "visits"})
+    )
+
+    read = read.collect()
+    read_pd = read.to_pandas()
+
+    week = min(read['date_range_start'].dt.week().to_numpy())
+    
+    matches["safegraph_place_id"] = matches["safegraph_place_id"].astype(str)
+    read_pd["safegraph_place_id"] = read_pd["safegraph_place_id"].astype(str)
+    
+    outfile = matches.merge(read_pd, on="safegraph_place_id", how="left")
+    
+
+    agg_dict = {item: 'first' for item in cols_in_parquet}
+    agg_dict['visits'] = 'sum'
+    del(agg_dict['t'])
+    del(agg_dict['build_id'])
+    outfile = outfile.loc[:,cols_in_parquet]
+    
+    outfile2 = outfile.groupby(['build_id', 't']).agg(agg_dict).reset_index()
+
+    outfile.to_parquet(os.path.join(folder_to_save, f"w{week}.parquet"), engine="pyarrow", index=False)
+
+

@@ -1,0 +1,5 @@
+home directory: /home/len2
+FEMA (clipped to Newport) = novus/matchingnemo/scratch/or_structures_clip.gpkg
+FEMA (full) = /novus/matchingnemo/scratch/safegraph_data/Weekly Patterns/Digital_Twins_Analysis/temporary_stash_very_heavy/entire_or_structures_clip.gpkg
+novus/matchingnemo/scratch/Safegraph/ = //stak.engr.oregonstate.edu/mime_u1/Dalziel/Safe Graph Data/
+Outputs: novus/matchingnemo/scratch/ampnet_data
