@@ -125,7 +125,7 @@ for file in os.listdir(data_2019):
     del(agg_dict['build_id'])
     outfile = outfile.loc[:,cols_in_parquet]
     
-    outfile2 = outfile.groupby(['build_id', 't']).agg(agg_dict).reset_index()
+    outfile = outfile.groupby(['build_id', 't'], dropna = False).agg(agg_dict).reset_index()
 
     outfile.to_parquet(os.path.join(folder_to_save, f"w{week}.parquet"), engine="pyarrow", index=False)
 
